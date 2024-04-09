@@ -44,7 +44,7 @@ static const lcd_init_cmd_t    s_lcd_cmd_list[] =
     {0x3A,{0x55},1,1,10},
     {0x36,{0x00},1,0,0},
     {0x2A,{0,0,LCD_V_RES>>8,LCD_V_RES&0xff},4,0,0},
-    {0x2B,{0,0,LCD_H_RES,LCD_H_RES},4,0,0},
+    {0x2B,{0,0,LCD_H_RES>>8,LCD_H_RES&0xff},4,0,0},
     {0x21,{0},0,1,10},
     {0x13,{0},0,1,10},
 
@@ -53,6 +53,12 @@ static const lcd_init_cmd_t    s_lcd_cmd_list[] =
     {0x29,{0},0,1,500}
 };
 
+static bool example_notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx)
+{
+    lv_disp_drv_t *disp_driver = (lv_disp_drv_t *)user_ctx;
+    lv_disp_flush_ready(disp_driver);
+    return false;
+}
 
 //st7789外设初始化
 void st7789_driver_hw_init(void)
@@ -78,7 +84,6 @@ void st7789_driver_hw_init(void)
     ESP_ERROR_CHECK(spi_bus_initialize(LCD_SPI_HOST, &buscfg, SPI_DMA_CH_AUTO));
 
     //创建基于spi的lcd操作句柄
-    
     esp_lcd_panel_io_spi_config_t io_config = {
         .dc_gpio_num = LCD_DC_GPIO,
         .cs_gpio_num = LCD_CS_GPIO,
@@ -92,7 +97,6 @@ void st7789_driver_hw_init(void)
     };
     // Attach the LCD to the SPI bus
     ESP_ERROR_CHECK(esp_lcd_new_panel_io_spi((esp_lcd_spi_bus_handle_t)LCD_SPI_HOST, &io_config, &lcd_io_handle));
-
 
 }
 
@@ -129,8 +133,8 @@ static void example_lvgl_flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_
         (y_end - 1) & 0xFF,
     }, 4);
     // transfer frame buffer
-    //size_t len = (x_end - x_start) * (y_end - y_start) * st7789->fb_bits_per_pixel / 8;
-    //esp_lcd_panel_io_tx_color(lcd_io_handle, LCD_CMD_RAMWR, color_data, len);
+    size_t len = (x_end - x_start) * (y_end - y_start) * 2;
+    esp_lcd_panel_io_tx_color(lcd_io_handle, LCD_CMD_RAMWR, color_map, len);
 
     return ;
 
