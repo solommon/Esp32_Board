@@ -10,7 +10,7 @@
 #include "esp_err.h"
 #include "esp_log.h"
 #include "st7789_driver.h"
-#include "lvgl.h"
+#include "lvgl/lvgl.h"
 
 #define LCD_BL_GPIO     2
 #define LCD_MOSI_GPIO   3
