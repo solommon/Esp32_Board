@@ -134,6 +134,7 @@ static void lcd_init(void)
     st7789_config.cs = GPIO_NUM_5;
     st7789_config.dc = GPIO_NUM_6;
     st7789_config.rst = GPIO_NUM_7;
+    st7789_config.bl = GPIO_NUM_26;
     st7789_config.spi_fre = 40*1000*1000;
     st7789_config.width = LCD_WIDTH;
     st7789_config.height = LCD_HEIGHT;

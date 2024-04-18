@@ -75,7 +75,6 @@ bool ledc_finish_cb(const ledc_cb_param_t *param, void *user_arg)
     BaseType_t xHigherPriorityTaskWoken;
     if(param->duty)
     {
-        
         xEventGroupSetBitsFromISR(s_ledc_ev,LEDC_ON_EV,&xHigherPriorityTaskWoken);
     }
     else
@@ -94,16 +93,18 @@ void IRAM_ATTR ledc_breath_task(void* param)
         ev = xEventGroupWaitBits(s_ledc_ev,LEDC_ON_EV|LEDC_OFF_EV,pdTRUE,pdFALSE,pdMS_TO_TICKS(5000));
         if(ev)
         {
+            //设置LEDC开灯渐变
             if(ev & LEDC_OFF_EV)
             {
                 ledc_set_fade_with_time(LEDC_MODE,LEDC_CHANNEL,LEDC_DUTY,2000);
                 ledc_fade_start(LEDC_MODE,LEDC_CHANNEL,LEDC_FADE_NO_WAIT);
             }
-            else if(ev & LEDC_ON_EV)
+            else if(ev & LEDC_ON_EV)    //设置LEDC关灯渐变
             {
                 ledc_set_fade_with_time(LEDC_MODE,LEDC_CHANNEL,0,2000);
                 ledc_fade_start(LEDC_MODE,LEDC_CHANNEL,LEDC_FADE_NO_WAIT);
             }
+            //再次设置回调函数
             ledc_cbs_t cbs = {.fade_cb=ledc_finish_cb,};
             ledc_cb_register(LEDC_MODE,LEDC_CHANNEL,&cbs,NULL);
         }
@@ -126,12 +127,12 @@ void led_breath_init(void)
 
     // Prepare and then apply the LEDC PWM channel configuration
     ledc_channel_config_t ledc_channel = {
-        .speed_mode     = LEDC_MODE,
-        .channel        = LEDC_CHANNEL,
-        .timer_sel      = LEDC_TIMER,
-        .intr_type      = LEDC_INTR_DISABLE,
-        .gpio_num       = LEDC_OUTPUT_IO,
-        .duty           = 0, // Set duty to 0%
+        .speed_mode     = LEDC_MODE,        //低速模式
+        .channel        = LEDC_CHANNEL,     //PWM 通道0-7
+        .timer_sel      = LEDC_TIMER,       //关联定时器，也就是上面初始化好的那个定时器
+        .intr_type      = LEDC_INTR_DISABLE,//不使能中断
+        .gpio_num       = LEDC_OUTPUT_IO,   //设置输出PWM方波的GPIO管脚
+        .duty           = 0, // 设置默认占空比为0
         .hpoint         = 0
     };
     ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
@@ -139,6 +140,7 @@ void led_breath_init(void)
     //开启硬件PWM
     ledc_fade_func_install(0);
 
+    //创建一个事件组，用于通知任务渐变完成
     s_ledc_ev = xEventGroupCreate();
 
     //配置LEDC渐变

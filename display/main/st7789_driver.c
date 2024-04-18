@@ -20,6 +20,8 @@ static esp_lcd_panel_io_handle_t lcd_io_handle = NULL;
 //刷新完成回调函数
 static lcd_flush_done_cb    s_flush_done_cb = NULL;
 
+//背光GPIO
+static gpio_num_t   s_bl_gpio = -1;
 
 typedef struct {
     uint8_t cmd;                //命令
@@ -60,15 +62,6 @@ static bool notify_flush_ready(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel
 */
 esp_err_t st7789_driver_hw_init(st7789_cfg_t* cfg)
 {
-    //初始化GPIO(BL)
-    gpio_config_t bl_gpio_cfg = 
-    {
-        .pull_up_en = GPIO_PULLUP_DISABLE,          //禁止上拉
-        .pull_down_en = GPIO_PULLDOWN_DISABLE,      //禁止下拉
-        .mode = GPIO_MODE_OUTPUT,                   //输出模式
-        .intr_type = GPIO_INTR_DISABLE,             //禁止中断
-    };
-    gpio_config(&bl_gpio_cfg);
     //初始化SPI
     spi_bus_config_t buscfg = {
         .sclk_io_num = cfg->clk,
@@ -81,6 +74,18 @@ esp_err_t st7789_driver_hw_init(st7789_cfg_t* cfg)
     ESP_ERROR_CHECK(spi_bus_initialize(LCD_SPI_HOST, &buscfg, SPI_DMA_CH_AUTO));
 
     s_flush_done_cb = cfg->done_cb; //设置刷新完成回调函数
+
+    s_bl_gpio = cfg->bl;    //设置背光GPIO
+    //初始化GPIO(BL)
+    gpio_config_t bl_gpio_cfg = 
+    {
+        .pull_up_en = GPIO_PULLUP_DISABLE,          //禁止上拉
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,      //禁止下拉
+        .mode = GPIO_MODE_OUTPUT,                   //输出模式
+        .intr_type = GPIO_INTR_DISABLE,             //禁止中断
+        .pin_bit_mask = (1<<cfg->bl)                //GPIO脚
+    };
+    gpio_config(&bl_gpio_cfg);
 
     //创建基于spi的lcd操作句柄
     esp_lcd_panel_io_spi_config_t io_config = {
@@ -133,4 +138,20 @@ void st7789_flush(int x1,int x2,int y1,int y2,void *data)
     esp_lcd_panel_io_tx_color(lcd_io_handle, LCD_CMD_RAMWR, data, len);
 
     return ;
+}
+
+/** 控制背光
+ * @param enable 是否使能背光
+ * @return 无
+*/
+void st7789_lcd_backlight(bool enable)
+{
+    if(enable)
+    {
+        gpio_set_level(s_bl_gpio,1);
+    }
+    else
+    {
+        gpio_set_level(s_bl_gpio,0);
+    }
 }

@@ -12,6 +12,7 @@ typedef struct
     gpio_num_t  cs;         //片选
     gpio_num_t  dc;         //命令
     gpio_num_t  rst;        //复位
+    gpio_num_t  bl;         //背光
     uint32_t    spi_fre;    //spi总线速率
     uint16_t    width;      //宽
     uint16_t    height;     //长
@@ -32,5 +33,11 @@ esp_err_t st7789_driver_hw_init(st7789_cfg_t* cfg);
  * @return 无
 */
 void st7789_flush(int x1,int x2,int y1,int y2,void *data);
+
+/** 控制背光
+ * @param enable 是否使能背光
+ * @return 无
+*/
+void st7789_lcd_backlight(bool enable);
 
 #endif
