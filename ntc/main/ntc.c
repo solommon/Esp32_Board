@@ -191,21 +191,21 @@ void temp_ntc_init(void)
     //-------------ADC1 Config---------------//
     adc_oneshot_chan_cfg_t config = {
         .bitwidth = ADC_BITWIDTH_12,       //分辨率
-        .atten = ADC_ATTEN_DB_11,          
+        .atten = ADC_ATTEN_DB_12,          
         //衰减倍数，ESP32设计的ADC参考电压为1100mV,只能测量0-1100mV之间的电压，如果要测量更大范围的电压
         //需要设置衰减倍数
         /*以下是对应可测量范围
         ADC_ATTEN_DB_0	    100 mV ~ 950 mV
         ADC_ATTEN_DB_2_5	100 mV ~ 1250 mV
         ADC_ATTEN_DB_6	    150 mV ~ 1750 mV
-        ADC_ATTEN_DB_11	    150 mV ~ 2450 mV
+        ADC_ATTEN_DB_12	    150 mV ~ 2450 mV
         */
     };
     ESP_ERROR_CHECK(adc_oneshot_config_channel(s_adc_handle, TEMP_ADC_CHANNEL, &config));
 
     //-------------ADC1 Calibration Init---------------//
     
-    do_calibration1 = example_adc_calibration_init(ADC_UNIT_1, ADC_ATTEN_DB_11, &adc1_cali_handle);
+    do_calibration1 = example_adc_calibration_init(ADC_UNIT_1, ADC_ATTEN_DB_12, &adc1_cali_handle);
     xTaskCreatePinnedToCore(temp_adc_task, "adc_task", 2048, NULL,2, NULL, 1);
 }
 
