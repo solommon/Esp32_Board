@@ -1,5 +1,6 @@
 #include "cst816t_driver.h"
 #include "driver/i2c.h"
+//#include "driver/i2c_master.h"
 #include "esp_log.h"
 
 #define TOUCH_I2C_PORT      I2C_NUM_0
@@ -50,20 +51,22 @@ esp_err_t   cst816t_init(cst816t_cfg_t* cfg)
 /** 读取坐标值
  * @param  x x坐标
  * @param  y y坐标
+ * @param state 松手状态 0,松手 1按下
  * @return 无
 */
-void cst816t_read(uint16_t *x,uint16_t *y)
+void cst816t_read(int16_t *x,int16_t *y,int *state)
 {
     uint8_t data_x[2];        // 2 bytesX
     uint8_t data_y[2];        // 2 bytesY
-    uint8_t touch_pnt_cnt;        // Number of detected touch points
+    uint8_t touch_pnt_cnt = 0;        // Number of detected touch points
     static int16_t last_x = 0;  // 12bit pixel value
     static int16_t last_y = 0;  // 12bit pixel value
-
+    ESP_LOGI(TAG,"cst816t read");
     i2c_read(CST816T_ADDR, 0x02,1, &touch_pnt_cnt);
     if (touch_pnt_cnt != 1) {    // ignore no touch & multi touch
         *x = last_x;
         *y = last_y;
+        *state = 0;
         return;
     }
 
@@ -83,6 +86,7 @@ void cst816t_read(uint16_t *x,uint16_t *y)
 
     *x = last_x;
     *y = last_y;
+    *state = 1;
 }
 
 

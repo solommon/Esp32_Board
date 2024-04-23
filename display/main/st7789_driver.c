@@ -14,6 +14,8 @@
 
 #define LCD_SPI_HOST    SPI2_HOST
 
+static const char* TAG = "st7789";
+
 //lcd操作句柄
 static esp_lcd_panel_io_handle_t lcd_io_handle = NULL;
 
@@ -69,7 +71,8 @@ esp_err_t st7789_driver_hw_init(st7789_cfg_t* cfg)
         .miso_io_num = -1,
         .quadwp_io_num = -1,
         .quadhd_io_num = -1,
-        .max_transfer_sz = cfg->width * 80 * sizeof(uint16_t),
+        .flags = SPICOMMON_BUSFLAG_MASTER ,
+        .max_transfer_sz = cfg->width * 40 * sizeof(uint16_t),
     };
     ESP_ERROR_CHECK(spi_bus_initialize(LCD_SPI_HOST, &buscfg, SPI_DMA_CH_AUTO));
 
@@ -98,19 +101,24 @@ esp_err_t st7789_driver_hw_init(st7789_cfg_t* cfg)
         .trans_queue_depth = 10,
         .on_color_trans_done = notify_flush_ready,   //刷新完成回调函数
         .user_ctx = cfg->cb_param,                                    //回调函数参数
+        .flags = {    // 以下为 SPI 时序的相关参数，需根据 LCD 驱动 IC 的数据手册以及硬件的配置确定
+            .sio_mode = 0,    // 通过一根数据线（MOSI）读写数据，0: Interface I 型，1: Interface II 型
+        },
     };
     // Attach the LCD to the SPI bus
+    ESP_LOGI(TAG,"create esp_lcd_new_panel");
     ESP_ERROR_CHECK(esp_lcd_new_panel_io_spi((esp_lcd_spi_bus_handle_t)LCD_SPI_HOST, &io_config, &lcd_io_handle));
-
+    
     //命令表
     int i = 0;
+    ESP_LOGI(TAG,"init st7789 lcd cmd");
     for(i = 0;i < sizeof(s_lcd_cmd_list)/sizeof(s_lcd_cmd_list[0]);i++)
     {
         esp_lcd_panel_io_tx_param(lcd_io_handle,s_lcd_cmd_list[i].cmd,s_lcd_cmd_list[i].data,s_lcd_cmd_list[i].databytes);
-        if(s_lcd_cmd_list[i].delayflg)
-            vTaskDelay(pdMS_TO_TICKS(s_lcd_cmd_list[i].delaytime));
+        //if(s_lcd_cmd_list[i].delayflg)
+            //vTaskDelay(pdMS_TO_TICKS(s_lcd_cmd_list[i].delaytime));
     }
-
+    ESP_LOGI(TAG,"st7789 init success!");
     return ESP_OK;
 }
 
@@ -121,6 +129,12 @@ esp_err_t st7789_driver_hw_init(st7789_cfg_t* cfg)
 void st7789_flush(int x1,int x2,int y1,int y2,void *data)
 {
     // define an area of frame memory where MCU can access
+    if(x2 <= x1 || y2 <= y1)
+    {
+        if(s_flush_done_cb)
+            s_flush_done_cb(NULL);
+        return;
+    }
     esp_lcd_panel_io_tx_param(lcd_io_handle, LCD_CMD_CASET, (uint8_t[]) {
         (x1 >> 8) & 0xFF,
         x1 & 0xFF,
@@ -135,8 +149,9 @@ void st7789_flush(int x1,int x2,int y1,int y2,void *data)
     }, 4);
     // transfer frame buffer
     size_t len = (x2 - x1) * (y2 - y1) * 2;
-    esp_lcd_panel_io_tx_color(lcd_io_handle, LCD_CMD_RAMWR, data, len);
 
+    esp_lcd_panel_io_tx_color(lcd_io_handle, LCD_CMD_RAMWR, data, len);
+    //panel_st7789_draw_bitmap
     return ;
 }
 

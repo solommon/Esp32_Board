@@ -7,6 +7,7 @@
 #include "lv_port.h"
 #include "lvgl.h"
 #include "st7789_driver.h"
+#include "cst816t_driver.h"
 
 static lv_disp_drv_t disp_drv;
 static const char *TAG = "lv_port";
@@ -46,7 +47,7 @@ static void lv_port_flush_ready(void* param)
 static void disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p)
 {
     (void) disp_drv;
-    st7789_flush(area->x1, area->y1, area->x2 + 1, area->y2 + 1, color_p);
+    st7789_flush(area->x1, area->x2 + 1, area->y1,area->y2 + 1, color_p);
 }
 
 /**
@@ -59,11 +60,10 @@ static void lv_port_disp_init(void)
     size_t disp_buf_height = 40;
 
     /* 必须从内部RAM分配显存，这样刷新速度快 */
-    lv_color_t *p_disp_buf = heap_caps_malloc(LCD_WIDTH * disp_buf_height * sizeof(lv_color_t) * 2, MALLOC_CAP_INTERNAL);
-    lv_color_t *p_disp_buf1 = p_disp_buf;
-    lv_color_t *p_disp_buf2 = p_disp_buf + LCD_WIDTH * disp_buf_height;
+    lv_color_t *p_disp_buf1 = heap_caps_malloc(LCD_WIDTH * disp_buf_height * sizeof(lv_color_t), MALLOC_CAP_INTERNAL | MALLOC_CAP_DMA);
+    lv_color_t *p_disp_buf2 = heap_caps_malloc(LCD_WIDTH * disp_buf_height * sizeof(lv_color_t), MALLOC_CAP_INTERNAL | MALLOC_CAP_DMA);
     ESP_LOGI(TAG, "Try allocate two %u * %u display buffer, size:%u Byte", LCD_WIDTH, disp_buf_height, LCD_WIDTH * disp_buf_height * sizeof(lv_color_t) * 2);
-    if (NULL == p_disp_buf) {
+    if (NULL == p_disp_buf1 || NULL == p_disp_buf2) {
         ESP_LOGE(TAG, "No memory for LVGL display buffer");
         esp_system_abort("Memory allocation failed");
     }
@@ -88,6 +88,25 @@ static void lv_port_disp_init(void)
     lv_disp_drv_register(&disp_drv);
 }
 
+
+/**
+ * @brief 获取触摸坐标
+ *
+ * @param indev_drv  触摸驱动
+ * @param data      数据
+ * @return 无
+ */
+void IRAM_ATTR indev_read(struct _lv_indev_drv_t * indev_drv, lv_indev_data_t * data)
+{
+    int16_t x,y;
+    int state;
+    cst816t_read(&x,&y,&state);
+    data->point.x = x;
+    data->point.y = y;
+    data->state = state;
+   
+}
+
 /**
  * @brief 注册LVGL输入驱动
  *
@@ -95,6 +114,11 @@ static void lv_port_disp_init(void)
  */
 static esp_err_t lv_port_indev_init(void)
 {
+    static lv_indev_drv_t   indev_drv;
+    lv_indev_drv_init(&indev_drv);
+    indev_drv.type = LV_INDEV_TYPE_POINTER;
+    indev_drv.read_cb = indev_read;
+    lv_indev_drv_register(&indev_drv);
     return ESP_OK;
 }
 
@@ -129,11 +153,11 @@ static esp_err_t lv_port_tick_init(void)
 static void lcd_init(void)
 {
     st7789_cfg_t st7789_config;
-    st7789_config.mosi = GPIO_NUM_3;
-    st7789_config.clk = GPIO_NUM_4;
+    st7789_config.mosi = GPIO_NUM_19;
+    st7789_config.clk = GPIO_NUM_18;
     st7789_config.cs = GPIO_NUM_5;
-    st7789_config.dc = GPIO_NUM_6;
-    st7789_config.rst = GPIO_NUM_7;
+    st7789_config.dc = GPIO_NUM_17;
+    st7789_config.rst = GPIO_NUM_21;
     st7789_config.bl = GPIO_NUM_26;
     st7789_config.spi_fre = 40*1000*1000;
     st7789_config.width = LCD_WIDTH;
@@ -143,6 +167,24 @@ static void lcd_init(void)
     st7789_config.cb_param = &disp_drv;
 
     st7789_driver_hw_init(&st7789_config);
+}
+
+/**
+ * @brief 触摸芯片初始化
+ *
+ * @return NULL
+ */
+static void tp_init(void)
+{
+    cst816t_cfg_t cst816t_config;
+    cst816t_config.sda = GPIO_NUM_23;
+    cst816t_config.scl = GPIO_NUM_22;
+    cst816t_config.x_limit = LCD_WIDTH;
+    cst816t_config.y_limit = LCD_HEIGHT;
+    cst816t_config.fre = 200*1000;
+    
+
+    cst816t_init(&cst816t_config);
 }
 
 
@@ -156,6 +198,9 @@ esp_err_t lv_port_init(void)
 
     /* 注册显示驱动 */
     lv_port_disp_init();
+
+    /*触摸芯片初始化*/
+    tp_init();
 
     /* 注册输入驱动*/
     lv_port_indev_init();

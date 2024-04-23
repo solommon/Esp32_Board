@@ -25,8 +25,9 @@ esp_err_t   cst816t_init(cst816t_cfg_t* cfg);
 /** 读取坐标值
  * @param  x x坐标
  * @param  y y坐标
+ * @param state 松手状态 0,松手 1按下
  * @return 无
 */
-void cst816t_read(uint16_t *x,uint16_t *y);
+void cst816t_read(int16_t *x,int16_t *y,int *state);
 
 #endif
