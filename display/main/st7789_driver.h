@@ -16,7 +16,7 @@ typedef struct
     uint32_t    spi_fre;    //spi总线速率
     uint16_t    width;      //宽
     uint16_t    height;     //长
-    uint8_t     spin;       //选择方向(0不选择，1旋转90, 2旋转180，3旋转270)
+    uint8_t     spin;       //选择方向(0不旋转，1顺时针旋转90, 2旋转180，3顺时针旋转270)
     lcd_flush_done_cb   done_cb;    //数据传输完成回调函数
     void*       cb_param;   //回调函数参数
 }st7789_cfg_t;

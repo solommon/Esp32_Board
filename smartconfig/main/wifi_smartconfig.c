@@ -4,7 +4,7 @@
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
 #include "esp_wifi.h"
-#include "esp_wpa2.h"
+#include "esp_eap_client.h"
 #include "esp_event.h"
 #include "esp_log.h"
 #include "esp_system.h"
@@ -86,7 +86,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
     }
 }
 
-static void initialise_wifi(void)
+void initialise_wifi(void)
 {
     ESP_ERROR_CHECK(esp_netif_init());
     s_wifi_event_group = xEventGroupCreate();
@@ -122,10 +122,4 @@ static void smartconfig_example_task(void * parm)
             vTaskDelete(NULL);
         }
     }
-}
-
-void app_main(void)
-{
-    ESP_ERROR_CHECK( nvs_flash_init() );
-    initialise_wifi();
 }

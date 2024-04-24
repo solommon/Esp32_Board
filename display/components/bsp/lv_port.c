@@ -12,7 +12,7 @@
 static lv_disp_drv_t disp_drv;
 static const char *TAG = "lv_port";
 
-#define LCD_WIDTH   320
+#define LCD_WIDTH   280
 #define LCD_HEIGHT  240
 
 /**
@@ -162,7 +162,7 @@ static void lcd_init(void)
     st7789_config.spi_fre = 40*1000*1000;
     st7789_config.width = LCD_WIDTH;
     st7789_config.height = LCD_HEIGHT;
-    st7789_config.spin = 0;
+    st7789_config.spin = 1;     //LVGL中可以使用lv_disp_set_rotation函数进行软旋转，但效果没有直接设置屏幕好
     st7789_config.done_cb = lv_port_flush_ready;
     st7789_config.cb_param = &disp_drv;
 

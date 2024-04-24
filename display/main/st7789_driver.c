@@ -25,31 +25,6 @@ static lcd_flush_done_cb    s_flush_done_cb = NULL;
 //背光GPIO
 static gpio_num_t   s_bl_gpio = -1;
 
-typedef struct {
-    uint8_t cmd;                //命令
-    uint8_t data[8];           //数据
-    uint8_t databytes;          //
-    uint8_t delayflg;           //延时标志
-    uint16_t delaytime;          //延时时间ms
-} lcd_init_cmd_t;
-
-//初始化写入的命令列表
-static const lcd_init_cmd_t    s_lcd_cmd_list[] = 
-{
-    {0x01,{0},0,1,150},
-    {0x11,{0},0,1,500},
-    {0x3A,{0x55},1,1,10},
-    {0x36,{0x00},1,0,0},
-    //{0x2A,{0,0,0,0},4,0,0},
-    //{0x2B,{0,0,0,0},4,0,0},
-    {0x21,{0},0,1,10},
-    {0x13,{0},0,1,10},
-
-    {0x36,{0x70},1,0,0},   //显示方向旋转
-
-    {0x29,{0},0,1,500}
-};
-
 static bool notify_flush_ready(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx)
 {
     if(s_flush_done_cb)
@@ -109,16 +84,32 @@ esp_err_t st7789_driver_hw_init(st7789_cfg_t* cfg)
     ESP_LOGI(TAG,"create esp_lcd_new_panel");
     ESP_ERROR_CHECK(esp_lcd_new_panel_io_spi((esp_lcd_spi_bus_handle_t)LCD_SPI_HOST, &io_config, &lcd_io_handle));
     
-    //命令表
-    int i = 0;
-    ESP_LOGI(TAG,"init st7789 lcd cmd");
-    for(i = 0;i < sizeof(s_lcd_cmd_list)/sizeof(s_lcd_cmd_list[0]);i++)
+    //写入命令
+    esp_lcd_panel_io_tx_param(lcd_io_handle,LCD_CMD_SWRESET,NULL,0);    //软件复位
+    vTaskDelay(pdTICKS_TO_MS(150));
+    esp_lcd_panel_io_tx_param(lcd_io_handle,LCD_CMD_SLPOUT,NULL,0);     //推出休眠模式
+    vTaskDelay(pdTICKS_TO_MS(100));
+    esp_lcd_panel_io_tx_param(lcd_io_handle,LCD_CMD_COLMOD,(uint8_t[]) {0x55,}, 1);  //选择RGB数据格式，0x55:RGB565,0x66:RGB666
+    
+    uint8_t spin_type = 0;
+    switch(cfg->spin)
     {
-        esp_lcd_panel_io_tx_param(lcd_io_handle,s_lcd_cmd_list[i].cmd,s_lcd_cmd_list[i].data,s_lcd_cmd_list[i].databytes);
-        //if(s_lcd_cmd_list[i].delayflg)
-            //vTaskDelay(pdMS_TO_TICKS(s_lcd_cmd_list[i].delaytime));
+        case 0:
+            spin_type = 0x00;   //不旋转
+            break;
+        case 1:
+            spin_type = 0x60;   //顺时针90
+            break;
+        case 2:
+            spin_type = 0xC0;   //180
+            break;
+        case 3:
+            spin_type = 0xA0;   //顺时针270,（逆时针90）
+            break;
+        default:break;
     }
-    ESP_LOGI(TAG,"st7789 init success!");
+    esp_lcd_panel_io_tx_param(lcd_io_handle,LCD_CMD_MADCTL,(uint8_t[]) {spin_type,}, 1);   //屏旋转方向
+    esp_lcd_panel_io_tx_param(lcd_io_handle,LCD_CMD_DISPON,NULL,0);    //打开显示
     return ESP_OK;
 }
 
@@ -149,9 +140,7 @@ void st7789_flush(int x1,int x2,int y1,int y2,void *data)
     }, 4);
     // transfer frame buffer
     size_t len = (x2 - x1) * (y2 - y1) * 2;
-
     esp_lcd_panel_io_tx_color(lcd_io_handle, LCD_CMD_RAMWR, data, len);
-    //panel_st7789_draw_bitmap
     return ;
 }
 
