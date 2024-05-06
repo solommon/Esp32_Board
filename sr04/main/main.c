@@ -13,9 +13,7 @@
 
 const static char *TAG = "example";
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////// Please update the following configuration according to your board spec ////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//TRIG和ECHO对应的GPIO
 #define HC_SR04_TRIG_GPIO  GPIO_NUM_32
 #define HC_SR04_ECHO_GPIO  GPIO_NUM_33
 
@@ -114,7 +112,7 @@ void app_main(void)
 
         // 等待捕获完成信号，
         if (xTaskNotifyWait(0x00, ULONG_MAX, &tof_ticks, pdMS_TO_TICKS(1000)) == pdTRUE) {
-            //计算脉宽时间长度，
+            //计算脉宽时间长度，从任务通知获取到的tof_ticks是计数，我们需要计算出对应的时间
             /*
             tof_ticks:计数
             esp_clk_apb_freq():计数时钟频率

@@ -13,10 +13,11 @@
 #define WS2812_GPIO_NUM     GPIO_NUM_26
 #define WS2812_LED_NUM      12
 
-//hsv转RGB
-//h色调 0-360
-//s饱和度 0-100
-//v亮度 0-100
+/** HSV转RGB ，暂无用到
+ * @param h:色调(0-360) s饱和度(0-100) v亮度(0-100)
+ * @param rgb
+ * @return 无
+*/
 void led_strip_hsv2rgb(uint32_t h, uint32_t s, uint32_t v, uint32_t *r, uint32_t *g, uint32_t *b)
 {
     h %= 360; // h -> [0,360]
@@ -63,84 +64,35 @@ void led_strip_hsv2rgb(uint32_t h, uint32_t s, uint32_t v, uint32_t *r, uint32_t
     }
 }
 
-#define DEFAULT_H   50
-#define DEFAULT_S   50
-
-uint8_t get_brightness(int index)
-{
-    //亮度数组    
-    static const uint8_t wave_brightness[] = 
-    {
-        0,0,0,0,0,
-        10,10,10,10,10,10,10,10,10,10,
-        15,15,15,15,15,15,15,15,15,
-        20,20,20,20,20,20,20,20,
-        25,25,25,25,25,25,25,
-        30,30,30,30,30,30,30,
-        45,45,45,45,45,45,
-        50,50,50,50,50,
-        55,55,55,55,55,
-        60,60,60,60,
-        65,65,65,65,
-        70,70,70,
-        65,65,65,65,
-        60,60,60,60,
-        55,55,55,55,55,
-        50,50,50,50,50,
-        45,45,45,45,45,45,
-        30,30,30,30,30,30,30,
-        25,25,25,25,25,25,25,
-        20,20,20,20,20,20,20,20,
-        15,15,15,15,15,15,15,15,15,
-        10,10,10,10,10,10,10,10,10,10,
-        0,0,0,0,0,
-    };
-
-    #define ARRAY_OFFSET    0
-
-    //下标数组
-    static uint8_t brightness_index[WS2812_LED_NUM] = 
-    {
-        11+ARRAY_OFFSET*10,
-        10+ARRAY_OFFSET*9,
-        9+ARRAY_OFFSET*8,
-        8+ARRAY_OFFSET*7,
-        7+ARRAY_OFFSET*6,
-        6+ARRAY_OFFSET*5,
-        5+ARRAY_OFFSET*4,
-        4+ARRAY_OFFSET*3,
-        3+ARRAY_OFFSET*2,
-        2+ARRAY_OFFSET*1,
-        1+ARRAY_OFFSET*0,
-        0+ARRAY_OFFSET*11,
-    };
-
-    //找到亮度值
-    uint8_t brightness = wave_brightness[brightness_index[index]];
-    brightness_index[index]++;
-    if(brightness_index[index] >= sizeof(wave_brightness))
-    {
-        brightness_index[index] = 0;
-    }
-
-    return brightness;
-}
-
 void app_main(void)
 {
-    ws2812_strip_t *ws2812_handle = NULL;
+    ws2812_strip_handle_t ws2812_handle = NULL;
     int index = 0;
     ws2812_init(WS2812_GPIO_NUM,WS2812_LED_NUM,&ws2812_handle);
 
     while(1)
     {
+        //红色跑马灯
         for(index = 0;index < WS2812_LED_NUM;index++)
         {
-            uint32_t r,g,b;
-            led_strip_hsv2rgb(DEFAULT_H,DEFAULT_S,get_brightness(index),&r,&g,&b);
+            uint32_t r = 230,g = 20,b = 20;
             ws2812_write(ws2812_handle,index,r,g,b);
+            vTaskDelay(pdMS_TO_TICKS(80));
         }
-        vTaskDelay(pdMS_TO_TICKS(20));
+        //绿色跑马灯
+        for(index = 0;index < WS2812_LED_NUM;index++)
+        {
+            uint32_t r = 20,g = 230,b = 20;
+            ws2812_write(ws2812_handle,index,r,g,b);
+            vTaskDelay(pdMS_TO_TICKS(80));
+        }
+        //蓝色跑马灯
+        for(index = 0;index < WS2812_LED_NUM;index++)
+        {
+            uint32_t r = 20,g = 20,b = 230;
+            ws2812_write(ws2812_handle,index,r,g,b);
+            vTaskDelay(pdMS_TO_TICKS(80));
+        }
     }
 
 }

@@ -21,16 +21,16 @@ void app_main(void)
     ESP_LOGI(TAG, "Initializing SPIFFS");
 
     esp_vfs_spiffs_conf_t conf = {
-      .base_path = "/spiffs",
-      .partition_label = NULL,
-      .max_files = 5,
+      .base_path = "/spiffs",   //可以认为挂着点，后续使用C库函数fopen("/spiffs/...")
+      .partition_label = NULL,  //指定spiffs分区，如果为NULL，则默认为分区表中第一个spiffs类型的分区
+      .max_files = 5,           //最大可同时打开的文件数
       .format_if_mount_failed = true
     };
 
-    // Use settings defined above to initialize and mount SPIFFS filesystem.
-    // Note: esp_vfs_spiffs_register is an all-in-one convenience function.
+    //初始化和挂载spiffs分区
     esp_err_t ret = esp_vfs_spiffs_register(&conf);
 
+    //失败处理
     if (ret != ESP_OK) {
         if (ret == ESP_FAIL) {
             ESP_LOGE(TAG, "Failed to mount or format filesystem");
@@ -44,7 +44,7 @@ void app_main(void)
 
 #ifdef CONFIG_EXAMPLE_SPIFFS_CHECK_ON_START
     ESP_LOGI(TAG, "Performing SPIFFS_check().");
-    ret = esp_spiffs_check(conf.partition_label);
+    ret = esp_spiffs_check(conf.partition_label);//操作spiffs文件系统器件断电，可能会导致 SPIFFS 损坏，可通过esp_spiffs_check恢复
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "SPIFFS_check() failed (%s)", esp_err_to_name(ret));
         return;

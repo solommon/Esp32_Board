@@ -186,6 +186,8 @@ void temp_ntc_init(void)
     adc_oneshot_unit_init_cfg_t init_config1 = {
         .unit_id = ADC_UNIT_1,  //WIFI和ADC2无法同时启用，这里选择ADC1
     };
+
+    //启用单次转换模式
     ESP_ERROR_CHECK(adc_oneshot_new_unit(&init_config1, &s_adc_handle));
 
     //-------------ADC1 Config---------------//
@@ -202,10 +204,10 @@ void temp_ntc_init(void)
         */
     };
     ESP_ERROR_CHECK(adc_oneshot_config_channel(s_adc_handle, TEMP_ADC_CHANNEL, &config));
-
     //-------------ADC1 Calibration Init---------------//
-    
     do_calibration1 = example_adc_calibration_init(ADC_UNIT_1, ADC_ATTEN_DB_12, &adc1_cali_handle);
+
+    //新建一个任务，不断地进行ADC和温度计算
     xTaskCreatePinnedToCore(temp_adc_task, "adc_task", 2048, NULL,2, NULL, 1);
 }
 
@@ -244,7 +246,6 @@ static void temp_adc_task(void* param)
             if(voltage < ADC_V_MAX)
             {
                 //电压转换为相应的电阻值
-                //res = (ADC_V_MAX*NTC_RES - voltage*NTC_RES)/voltage;
                 res = (voltage*NTC_RES)/(ADC_V_MAX-voltage);
                 //根据电阻值查表找出对应的温度
                 s_temp_value = get_ntc_temp(res);
@@ -257,7 +258,15 @@ static void temp_adc_task(void* param)
     }
 }
 
-//线性插值
+/** 线性插值，根据一元一次方程两点式，计算出K和B值，然后将X代入方程中计算出Y值
+ * 所谓的线性插值，就是已知两点的坐标，由于两点坐标比较接近，将这两点之间的连线认为是一条直线
+ * 然后通过这两点计算出这条直线的k和b值，
+ * 插值的意思是，有一个x值，处于x1和x2之间，想要求出对应的y值
+ * 这时候可以通过刚才计算出直线方程，计算出y值
+ * @param x 需要计算的X坐标
+ * @param x1,x2,y1,y2 两点式坐标
+ * @return y值
+*/
 static float linera_interpolation(int32_t x,int32_t x1, int32_t x2, int32_t y1, int32_t y2)
 {
     float k = (float)(y2 - y1) /(float)(x2 - x1);
@@ -266,7 +275,12 @@ static float linera_interpolation(int32_t x,int32_t x1, int32_t x2, int32_t y1, 
     return y;
 }
 
-//二分查找
+/** 二分查找，通过电阻值查找出温度值对应的下标
+ * @param res 电阻值
+ * @param left ntc表的左边界
+ * @param right ntc表的右边界
+ * @return 温度值数组下标
+*/
 static int find_ntc_index(uint32_t  res,uint16_t left, uint16_t right)
 {
     uint16_t middle = (left + right) / 2;
