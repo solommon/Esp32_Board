@@ -101,8 +101,8 @@ void IRAM_ATTR indev_read(struct _lv_indev_drv_t * indev_drv, lv_indev_data_t * 
     int16_t x,y;
     int state;
     cst816t_read(&x,&y,&state);
-    data->point.x = x;
-    data->point.y = y;
+    data->point.x = y;
+    data->point.y = LCD_HEIGHT - x;
     data->state = state;
    
 }
@@ -179,8 +179,8 @@ static void tp_init(void)
     cst816t_cfg_t cst816t_config;
     cst816t_config.sda = GPIO_NUM_23;
     cst816t_config.scl = GPIO_NUM_22;
-    cst816t_config.x_limit = LCD_WIDTH;
-    cst816t_config.y_limit = LCD_HEIGHT;
+    cst816t_config.x_limit = LCD_HEIGHT;    //由于屏幕显示旋转了90°，X和Y触摸需要调转
+    cst816t_config.y_limit = LCD_WIDTH;
     cst816t_config.fre = 200*1000;
     
 

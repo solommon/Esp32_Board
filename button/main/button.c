@@ -5,6 +5,7 @@
 #include "esp_timer.h"
 #include <stdio.h>
 #include <string.h>
+static const char* TAG = "button";
 
 typedef enum
 {
@@ -58,6 +59,7 @@ esp_err_t button_event_set(button_config_t *cfg)
     if(!s_button_head)
     {
         s_button_head = btn;
+        ESP_LOGI(TAG,"first btn add");
     }
     else
     {
@@ -65,17 +67,20 @@ esp_err_t button_event_set(button_config_t *cfg)
         while(btn_p->next != NULL)
             btn_p = btn_p->next;
         btn_p->next = btn;
+        ESP_LOGI(TAG,"btn add");
     }
     memcpy(&btn->btn_cfg,cfg,sizeof(button_config_t));
 
     if (false == g_is_timer_running) {
+        ESP_LOGI(TAG,"run button timer");
+        static int timer_interval = 5;
         esp_timer_create_args_t button_timer;
-        button_timer.arg = NULL;
+        button_timer.arg = (void*)timer_interval;
         button_timer.callback = button_handle;
         button_timer.dispatch_method = ESP_TIMER_TASK;
         button_timer.name = "button_handle";
         esp_timer_create(&button_timer, &g_button_timer_handle);
-        esp_timer_start_periodic(g_button_timer_handle,  5 * 1000U);
+        esp_timer_start_periodic(g_button_timer_handle,  5000);
         g_is_timer_running = true;
     }
 
@@ -104,6 +109,7 @@ static void button_handle(void *param)
                     btn_target->press_cnt += increase_cnt;
                     if(btn_target->press_cnt >= FILITER_TIMER)
                     {
+                        ESP_LOGI(TAG,"short press detect");
                         if(btn_target->btn_cfg.short_cb)
                             btn_target->btn_cfg.short_cb();
                         btn_target->state = BUTTON_HOLD;
@@ -118,6 +124,7 @@ static void button_handle(void *param)
                     btn_target->press_cnt += increase_cnt;
                     if(btn_target->press_cnt >= btn_target->btn_cfg.long_press_time)
                     {
+                        ESP_LOGI(TAG,"long press detect");
                         if(btn_target->btn_cfg.long_cb)
                             btn_target->btn_cfg.long_cb();
                         btn_target->state = BUTTON_LONG_PRESS_HOLD;
@@ -130,6 +137,7 @@ static void button_handle(void *param)
                 if(gpio_get_level(btn_target->btn_cfg.gpio_num) != btn_target->btn_cfg.active_level)
                 {
                     btn_target->state = BUTTON_RELEASE;
+                    btn_target->press_cnt = 0;
                 }
                 break;
             default:break;

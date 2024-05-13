@@ -61,7 +61,6 @@ void cst816t_read(int16_t *x,int16_t *y,int *state)
     uint8_t touch_pnt_cnt = 0;        // Number of detected touch points
     static int16_t last_x = 0;  // 12bit pixel value
     static int16_t last_y = 0;  // 12bit pixel value
-    ESP_LOGI(TAG,"cst816t read");
     i2c_read(CST816T_ADDR, 0x02,1, &touch_pnt_cnt);
     if (touch_pnt_cnt != 1) {    // ignore no touch & multi touch
         *x = last_x;

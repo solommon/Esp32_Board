@@ -86,11 +86,11 @@ esp_err_t st7789_driver_hw_init(st7789_cfg_t* cfg)
     
     //写入命令
     esp_lcd_panel_io_tx_param(lcd_io_handle,LCD_CMD_SWRESET,NULL,0);    //软件复位
-    vTaskDelay(pdTICKS_TO_MS(150));
+    vTaskDelay(pdMS_TO_TICKS(150));
     esp_lcd_panel_io_tx_param(lcd_io_handle,LCD_CMD_SLPOUT,NULL,0);     //推出休眠模式
-    vTaskDelay(pdTICKS_TO_MS(100));
+    vTaskDelay(pdMS_TO_TICKS(100));
     esp_lcd_panel_io_tx_param(lcd_io_handle,LCD_CMD_COLMOD,(uint8_t[]) {0x55,}, 1);  //选择RGB数据格式，0x55:RGB565,0x66:RGB666
-    
+    esp_lcd_panel_io_tx_param(lcd_io_handle,LCD_CMD_INVON,NULL,0);     //颜色翻转
     uint8_t spin_type = 0;
     switch(cfg->spin)
     {
@@ -110,6 +110,7 @@ esp_err_t st7789_driver_hw_init(st7789_cfg_t* cfg)
     }
     esp_lcd_panel_io_tx_param(lcd_io_handle,LCD_CMD_MADCTL,(uint8_t[]) {spin_type,}, 1);   //屏旋转方向
     esp_lcd_panel_io_tx_param(lcd_io_handle,LCD_CMD_DISPON,NULL,0);    //打开显示
+    vTaskDelay(pdMS_TO_TICKS(300));
     return ESP_OK;
 }
 

@@ -109,15 +109,15 @@ void app_main(void)
     gpio_config_t gpio_t = 
     {
         .intr_type = GPIO_INTR_DISABLE,
-        .mode = GPIO_MODE_INPUT,
-        .pin_bit_mask = (1ull<<BTN_GPIO),
+        .mode = GPIO_MODE_OUTPUT,
+        .pin_bit_mask = (1ull<<LED_GPIO),
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
         .pull_up_en = GPIO_PULLUP_ENABLE,
     };
     ESP_ERROR_CHECK(gpio_config(&gpio_t));
 
     //简单按键例程
-    xTaskCreatePinnedToCore(simple_btn_test,"btn1",2048,NULL,3,NULL,1);
+    //xTaskCreatePinnedToCore(simple_btn_test,"btn1",2048,NULL,3,NULL,1);
 
     //较通用的按键例程
     xTaskCreatePinnedToCore(complete_btn_test,"btn2",2048,NULL,3,NULL,1);
