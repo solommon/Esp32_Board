@@ -65,6 +65,21 @@ esp_err_t st7789_driver_hw_init(st7789_cfg_t* cfg)
     };
     gpio_config(&bl_gpio_cfg);
 
+
+    //初始化复位脚
+    if(cfg->rst > 0)
+    {
+        gpio_config_t rst_gpio_cfg = 
+        {
+            .pull_up_en = GPIO_PULLUP_DISABLE,          //禁止上拉
+            .pull_down_en = GPIO_PULLDOWN_DISABLE,      //禁止下拉
+            .mode = GPIO_MODE_OUTPUT,                   //输出模式
+            .intr_type = GPIO_INTR_DISABLE,             //禁止中断
+            .pin_bit_mask = (1<<cfg->rst)                //GPIO脚
+        };
+        gpio_config(&rst_gpio_cfg);
+    }
+
     //创建基于spi的lcd操作句柄
     esp_lcd_panel_io_spi_config_t io_config = {
         .dc_gpio_num = cfg->dc,
@@ -85,12 +100,22 @@ esp_err_t st7789_driver_hw_init(st7789_cfg_t* cfg)
     ESP_ERROR_CHECK(esp_lcd_new_panel_io_spi((esp_lcd_spi_bus_handle_t)LCD_SPI_HOST, &io_config, &lcd_io_handle));
     
     //写入命令
+    if(cfg->rst > 0)
+    {
+        gpio_set_level(cfg->rst,0);
+        vTaskDelay(pdMS_TO_TICKS(20));
+        gpio_set_level(cfg->rst,1);
+        vTaskDelay(pdMS_TO_TICKS(20));
+    }
     esp_lcd_panel_io_tx_param(lcd_io_handle,LCD_CMD_SWRESET,NULL,0);    //软件复位
     vTaskDelay(pdMS_TO_TICKS(150));
-    esp_lcd_panel_io_tx_param(lcd_io_handle,LCD_CMD_SLPOUT,NULL,0);     //推出休眠模式
-    vTaskDelay(pdMS_TO_TICKS(100));
+    esp_lcd_panel_io_tx_param(lcd_io_handle,LCD_CMD_SLPOUT,NULL,0);     //退出休眠模式
+    vTaskDelay(pdMS_TO_TICKS(200));
     esp_lcd_panel_io_tx_param(lcd_io_handle,LCD_CMD_COLMOD,(uint8_t[]) {0x55,}, 1);  //选择RGB数据格式，0x55:RGB565,0x66:RGB666
+    esp_lcd_panel_io_tx_param(lcd_io_handle, 0xb0, (uint8_t[]) {0x00, 0xF0},2);
+
     esp_lcd_panel_io_tx_param(lcd_io_handle,LCD_CMD_INVON,NULL,0);     //颜色翻转
+    esp_lcd_panel_io_tx_param(lcd_io_handle,LCD_CMD_NORON,NULL,0);     //普通显示模式
     uint8_t spin_type = 0;
     switch(cfg->spin)
     {
@@ -109,6 +134,7 @@ esp_err_t st7789_driver_hw_init(st7789_cfg_t* cfg)
         default:break;
     }
     esp_lcd_panel_io_tx_param(lcd_io_handle,LCD_CMD_MADCTL,(uint8_t[]) {spin_type,}, 1);   //屏旋转方向
+    vTaskDelay(pdMS_TO_TICKS(150));
     esp_lcd_panel_io_tx_param(lcd_io_handle,LCD_CMD_DISPON,NULL,0);    //打开显示
     vTaskDelay(pdMS_TO_TICKS(300));
     return ESP_OK;
