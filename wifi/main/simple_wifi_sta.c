@@ -13,14 +13,19 @@
 #include "esp_event.h"
 #include "esp_log.h"
 
-
-
 #define DEFAULT_WIFI_SSID           "wifitest"
 #define DEFAULT_WIFI_PASSWORD       "12345678"
-
-
 static const char *TAG = "wifi";
 
+
+
+/** 事件回调函数
+ * @param arg   用户传递的参数
+ * @param event_base    事件类别
+ * @param event_id      事件ID
+ * @param event_data    事件携带的数据
+ * @return 无
+*/
 static void event_handler(void* arg, esp_event_base_t event_base,int32_t event_id, void* event_data)
 {   
     if(event_base == WIFI_EVENT)
@@ -34,14 +39,14 @@ static void event_handler(void* arg, esp_event_base_t event_base,int32_t event_i
             ESP_LOGI(TAG, "connected to AP");
             break;
         case WIFI_EVENT_STA_DISCONNECTED:   //WIFI从路由器断开连接后触发此事件
-            esp_wifi_connect();         //继续重连
+            esp_wifi_connect();             //继续重连
             ESP_LOGI(TAG,"connect to the AP fail,retry now");
             break;
         default:
             break;
         }
     }
-    if(event_base == IP_EVENT)          //IP相关事件
+    if(event_base == IP_EVENT)                  //IP相关事件
     {
         switch(event_id)
         {

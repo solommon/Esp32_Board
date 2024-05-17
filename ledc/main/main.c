@@ -19,20 +19,12 @@
 //LED闪烁运行任务
 void led_run_task(void* param)
 {
-    bool light_flg = false; //LED亮灯标记
+    int gpio_level = 0;
     while(1)
     {
         vTaskDelay(pdMS_TO_TICKS(500));
-        if(light_flg)
-        {
-            gpio_set_level(LED_GPIO,0);
-            light_flg = false;
-        }
-        else
-        {
-            light_flg = true;
-            gpio_set_level(LED_GPIO,1);
-        }
+        gpio_set_level(LED_GPIO,gpio_level);
+        gpio_level = gpio_level?0:1;
     }
 }
 
@@ -70,7 +62,7 @@ static EventGroupHandle_t   s_ledc_ev = NULL;
 #define LEDC_ON_EV   (1<<1)
 
 //渐变完成回调函数
-bool ledc_finish_cb(const ledc_cb_param_t *param, void *user_arg)
+bool IRAM_ATTR ledc_finish_cb(const ledc_cb_param_t *param, void *user_arg)
 {
     BaseType_t xHigherPriorityTaskWoken;
     if(param->duty)
@@ -85,7 +77,7 @@ bool ledc_finish_cb(const ledc_cb_param_t *param, void *user_arg)
 }
 
 //ledc 渐变任务
-void IRAM_ATTR ledc_breath_task(void* param)
+void ledc_breath_task(void* param)
 {
     EventBits_t ev;
     while(1)
@@ -114,18 +106,17 @@ void IRAM_ATTR ledc_breath_task(void* param)
 //LED呼吸灯初始化
 void led_breath_init(void)
 {
-
-    // Prepare and then apply the LEDC PWM timer configuration
+    //初始化一个定时器
     ledc_timer_config_t ledc_timer = {
-        .speed_mode       = LEDC_MODE,
-        .timer_num        = LEDC_TIMER,
-        .duty_resolution  = LEDC_DUTY_RES,
-        .freq_hz          = LEDC_FREQUENCY,  // Set output frequency at 5 kHz
-        .clk_cfg          = LEDC_AUTO_CLK
+        .speed_mode       = LEDC_MODE,      //低速模式
+        .timer_num        = LEDC_TIMER,     //定时器ID
+        .duty_resolution  = LEDC_DUTY_RES,  //占空比分辨率，这里是13位，2^13-1
+        .freq_hz          = LEDC_FREQUENCY,  // PWM频率,这里是5KHZ
+        .clk_cfg          = LEDC_AUTO_CLK    // 时钟
     };
     ESP_ERROR_CHECK(ledc_timer_config(&ledc_timer));
 
-    // Prepare and then apply the LEDC PWM channel configuration
+    //ledc通道初始化
     ledc_channel_config_t ledc_channel = {
         .speed_mode     = LEDC_MODE,        //低速模式
         .channel        = LEDC_CHANNEL,     //PWM 通道0-7
