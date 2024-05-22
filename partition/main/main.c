@@ -19,8 +19,8 @@ static char g_esp_buf[1024];
 void app_main(void)
 {
     //找到自定义分区，返回分区指针，后续用到这个指针进行各种操作
-    partition_res=esp_partition_find_first(USER_PARTITION_TYPE,USER_PARTITION_SUBTYPE,NULL);
-    if(partition_res != NULL)
+    partition_res=esp_partition_find_first(USER_PARTITION_TYPE,USER_PARTITION_SUBTYPE,"user");
+    if(partition_res == NULL)
     {
         ESP_LOGI(TAG,"Can't find partition,return");
         return;

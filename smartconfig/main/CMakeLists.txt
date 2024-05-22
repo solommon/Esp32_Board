@@ -1,4 +1,4 @@
-idf_component_register(SRCS "wifi_smartconfig.c" "main.c"
+idf_component_register(SRCS "wifi_smartconfig.c" "main.c" "button.c"
                     INCLUDE_DIRS ".")
 
 

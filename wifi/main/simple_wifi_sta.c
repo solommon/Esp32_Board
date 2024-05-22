@@ -13,8 +13,10 @@
 #include "esp_event.h"
 #include "esp_log.h"
 
-#define DEFAULT_WIFI_SSID           "wifitest"
+//需要把这两个修改成你家WIFI，测试是否连接成功
+#define DEFAULT_WIFI_SSID           "testwifi"
 #define DEFAULT_WIFI_PASSWORD       "12345678"
+
 static const char *TAG = "wifi";
 
 
@@ -61,6 +63,9 @@ static void event_handler(void* arg, esp_event_base_t event_base,int32_t event_i
 //WIFI STA初始化
 esp_err_t wifi_sta_init(void)
 {   
+    ESP_ERROR_CHECK(esp_netif_init());  //用于初始化tcpip协议栈
+    ESP_ERROR_CHECK(esp_event_loop_create_default());       //创建一个默认系统事件调度循环，之后可以注册回调函数来处理系统的一些事件
+    esp_netif_create_default_wifi_sta();    //使用默认配置创建STA对象
 
     //初始化WIFI
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
@@ -88,9 +93,9 @@ esp_err_t wifi_sta_init(void)
     };
     
     //启动WIFI
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA) );
-    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config) );
-    ESP_ERROR_CHECK(esp_wifi_start() );
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA) );         //设置工作模式为STA
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config) );   //设置wifi配置
+    ESP_ERROR_CHECK(esp_wifi_start() );                         //启动WIFI
     
     ESP_LOGI(TAG, "wifi_init_sta finished.");
     return ESP_OK;

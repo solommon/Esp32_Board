@@ -139,7 +139,7 @@ void app_main(void)
         ESP_LOGI(TAG,"Read BOB SEX fail,please perform nvs_erase_key and try again");
 
      //读取NVS_JOHN_NAMESPACE命名空间中的SEX键值
-    len =read_nvs_str(NVS_JOHN_NAMESPACE,NVS_AGE_KEY,read_buf,64);
+    len =read_nvs_str(NVS_JOHN_NAMESPACE,NVS_SEX_KEY,read_buf,64);
     if(len)
         ESP_LOGI(TAG,"Read JOHN SEX:%s",read_buf);
     else
@@ -150,7 +150,7 @@ void app_main(void)
     blob_buf[0] = 19;
     //以字节方式写入
     write_nvs_blob(NVS_BOB_NAMESPACE,NVS_AGE_KEY,blob_buf,1); 
-    blob_buf[1] = 23;
+    blob_buf[0] = 23;
     write_nvs_blob(NVS_JOHN_NAMESPACE,NVS_AGE_KEY,blob_buf,1); 
     
     //以字节方式读取
