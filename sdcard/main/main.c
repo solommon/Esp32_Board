@@ -19,7 +19,7 @@
 
 static const char *TAG = "example";
 
-#define MOUNT_POINT "/sdcard"
+#define MOUNT_POINT "/sdcard"   //挂载点名称
 
 
 static esp_err_t s_example_write_file(const char *path, char *data)
@@ -62,23 +62,14 @@ static esp_err_t s_example_read_file(const char *path)
 void app_main(void)
 {
     esp_err_t ret;
-
-    // Options for mounting the filesystem.
-    // If format_if_mount_failed is set to true, SD card will be partitioned and
-    // formatted in case when mounting fails.
     esp_vfs_fat_sdmmc_mount_config_t mount_config = {
-        .format_if_mount_failed = true,
-        .max_files = 5,
-        .allocation_unit_size = 16 * 1024
+        .format_if_mount_failed = true,     //挂载失败是否执行格式化
+        .max_files = 5,                     //最大可打开文件数
+        .allocation_unit_size = 16 * 1024   //执行格式化时的分配单元大小（分配单元越大，读写越快）
     };
     sdmmc_card_t *card;
     const char mount_point[] = MOUNT_POINT;
     ESP_LOGI(TAG, "Initializing SD card");
-
-    // Use settings defined above to initialize SD card and mount FAT filesystem.
-    // Note: esp_vfs_fat_sdmmc/sdspi_mount is all-in-one convenience functions.
-    // Please check its source code and implement error recovery when developing
-    // production applications.
 
     ESP_LOGI(TAG, "Using SDMMC peripheral");
 

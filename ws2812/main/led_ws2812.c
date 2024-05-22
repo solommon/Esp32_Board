@@ -241,8 +241,8 @@ esp_err_t ws2812_write(ws2812_strip_handle_t handle,uint32_t index,uint32_t r,ui
     if(index >= handle->led_num)
         return ESP_FAIL;
     uint32_t start = index*3;
-    handle->led_buffer[start+0] = r & 0xff;
-    handle->led_buffer[start+1] = g & 0xff;
+    handle->led_buffer[start+0] = g & 0xff;     //注意，WS2812的数据顺序时GRB
+    handle->led_buffer[start+1] = r & 0xff;
     handle->led_buffer[start+2] = b & 0xff;
 
     return rmt_transmit(handle->led_chan, handle->led_encoder, handle->led_buffer, handle->led_num*3, &tx_config);

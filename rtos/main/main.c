@@ -82,7 +82,7 @@ void queue_taskB(void *param)
     {
         queue_packet packet;
         BaseType_t ret = xQueueReceive(s_testQueue,&packet,pdMS_TO_TICKS(200));
-        if(ret == ESP_OK)
+        if(ret == pdTRUE)
         {
             //如果收到数据就打印出来
             ESP_LOGI(TAG,"taskB receive packet,num:%d",packet.num);
@@ -130,7 +130,7 @@ void sem_taskA(void* param)
         }
 
         //向互斥信号量释放信号
-        xSemaphoreGive(s_testMuxSem);
+        xSemaphoreGiveRecursive(s_testMuxSem);
         vTaskDelay(pdMS_TO_TICKS(2000));
     }
 }
@@ -151,14 +151,14 @@ void sem_taskB(void* param)
         do
         {
             ret = xSemaphoreTake(s_testCountSem,pdMS_TO_TICKS(200));
-            if(ret)
+            if(ret==pdTRUE)
             {
                 ESP_LOGI(TAG,"take count semaphore,count:%d\r\n",++sem_count);
             }
-        }while(ret ==pdFALSE);
+        }while(ret ==pdTRUE);
         
         //无限等待互斥信号量，直到获取成功才返回，这里用法和二进制信号量极为类似
-        ret = xSemaphoreTake(s_testMuxSem,portMAX_DELAY);
+        ret = xSemaphoreTakeRecursive(s_testMuxSem,portMAX_DELAY);
         if(ret == pdTRUE)
             ESP_LOGI(TAG,"take Mutex semaphore");
 
@@ -238,12 +238,13 @@ static TaskHandle_t s_notifyTaskBHandle;
 */
 void notify_taskA(void* param)
 {
-    int notify_val = 0;
+    uint32_t rec_val = 0;
     while(1)
     {
-        xTaskNotify(s_notifyTaskBHandle, notify_val, eSetValueWithOverwrite);
-        notify_val++;
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        if (xTaskNotifyWait(0x00, ULONG_MAX, &rec_val, pdMS_TO_TICKS(1000)) == pdTRUE)
+        {
+            ESP_LOGI(TAG,"receive notify value:%lu",rec_val);
+        }
     }
 }
 
@@ -253,13 +254,12 @@ void notify_taskA(void* param)
 */
 void notify_taskB(void* param)
 {
-    int rec_val = 0;
+    int notify_val = 0;
     while(1)
     {
-        if (xTaskNotifyWait(0x00, ULONG_MAX, &rec_val, pdMS_TO_TICKS(1000)) == pdTRUE)
-        {
-            ESP_LOGI(TAG,"receive notify value:%d",rec_val);
-        }
+        xTaskNotify(s_notifyTaskAHandle, notify_val, eSetValueWithOverwrite);
+        notify_val++;
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 
@@ -279,9 +279,9 @@ void app_main(void)
     /*
     以下是每种freeRTOS特性的测试例程的初始化函数，建议每次只开一个，否则有太多打印影响体验
     */
-    rtos_task_sample();
+    //rtos_task_sample();
     //rtos_queue_sample();
-    //rtos_sem_sample();
+    rtos_sem_sample();
     //rtos_event_sample();
     //rtos_notify_sample();
 }

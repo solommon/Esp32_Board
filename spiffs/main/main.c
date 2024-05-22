@@ -86,14 +86,20 @@ void app_main(void)
     fclose(f);
     ESP_LOGI(TAG, "File written");
 
-    // Rename original file
+    //检查/spiffs/foo.txt这个文件是否存在，如果存在删除它
+    struct stat st;
+    if (stat("/spiffs/foo.txt", &st) == 0) {
+        // 删除/spiffs/foo.txt文件
+        unlink("/spiffs/foo.txt");
+    }
+    //重命名文件
     ESP_LOGI(TAG, "Renaming file");
     if (rename("/spiffs/hello.txt", "/spiffs/foo.txt") != 0) {
         ESP_LOGE(TAG, "Rename failed");
         return;
     }
 
-    // Open renamed file for reading
+    //打开foo文件读取一行
     ESP_LOGI(TAG, "Reading file");
     f = fopen("/spiffs/foo.txt", "r");
     if (f == NULL) {
