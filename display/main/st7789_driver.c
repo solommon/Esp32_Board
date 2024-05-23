@@ -41,13 +41,13 @@ esp_err_t st7789_driver_hw_init(st7789_cfg_t* cfg)
 {
     //初始化SPI
     spi_bus_config_t buscfg = {
-        .sclk_io_num = cfg->clk,
-        .mosi_io_num = cfg->mosi,
+        .sclk_io_num = cfg->clk,        //SCLK引脚
+        .mosi_io_num = cfg->mosi,       //MOSI引脚
         .miso_io_num = -1,
         .quadwp_io_num = -1,
         .quadhd_io_num = -1,
-        .flags = SPICOMMON_BUSFLAG_MASTER ,
-        .max_transfer_sz = cfg->width * 40 * sizeof(uint16_t),
+        .flags = SPICOMMON_BUSFLAG_MASTER , //SPI主模式
+        .max_transfer_sz = cfg->width * 40 * sizeof(uint16_t),  //DMA单次传输最大字节，最大32768
     };
     ESP_ERROR_CHECK(spi_bus_initialize(LCD_SPI_HOST, &buscfg, SPI_DMA_CH_AUTO));
 
@@ -82,13 +82,13 @@ esp_err_t st7789_driver_hw_init(st7789_cfg_t* cfg)
 
     //创建基于spi的lcd操作句柄
     esp_lcd_panel_io_spi_config_t io_config = {
-        .dc_gpio_num = cfg->dc,
-        .cs_gpio_num = cfg->cs,
-        .pclk_hz = cfg->spi_fre,
-        .lcd_cmd_bits = 8,
-        .lcd_param_bits = 8,
-        .spi_mode = 0,
-        .trans_queue_depth = 10,
+        .dc_gpio_num = cfg->dc,         //DC引脚
+        .cs_gpio_num = cfg->cs,         //CS引脚
+        .pclk_hz = cfg->spi_fre,        //SPI时钟频率
+        .lcd_cmd_bits = 8,              //命令长度
+        .lcd_param_bits = 8,            //参数长度
+        .spi_mode = 0,                  //使用SPI0模式
+        .trans_queue_depth = 10,        //表示可以缓存的spi传输事务队列深度
         .on_color_trans_done = notify_flush_ready,   //刷新完成回调函数
         .user_ctx = cfg->cb_param,                                    //回调函数参数
         .flags = {    // 以下为 SPI 时序的相关参数，需根据 LCD 驱动 IC 的数据手册以及硬件的配置确定
@@ -99,7 +99,7 @@ esp_err_t st7789_driver_hw_init(st7789_cfg_t* cfg)
     ESP_LOGI(TAG,"create esp_lcd_new_panel");
     ESP_ERROR_CHECK(esp_lcd_new_panel_io_spi((esp_lcd_spi_bus_handle_t)LCD_SPI_HOST, &io_config, &lcd_io_handle));
     
-    //写入命令
+    //硬件复位
     if(cfg->rst > 0)
     {
         gpio_set_level(cfg->rst,0);
@@ -107,6 +107,8 @@ esp_err_t st7789_driver_hw_init(st7789_cfg_t* cfg)
         gpio_set_level(cfg->rst,1);
         vTaskDelay(pdMS_TO_TICKS(20));
     }
+
+    /*向LCD写入初始化命令*/
     esp_lcd_panel_io_tx_param(lcd_io_handle,LCD_CMD_SWRESET,NULL,0);    //软件复位
     vTaskDelay(pdMS_TO_TICKS(150));
     esp_lcd_panel_io_tx_param(lcd_io_handle,LCD_CMD_SLPOUT,NULL,0);     //退出休眠模式

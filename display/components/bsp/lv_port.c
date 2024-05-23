@@ -159,12 +159,12 @@ static void lcd_init(void)
     st7789_config.dc = GPIO_NUM_17;
     st7789_config.rst = GPIO_NUM_21;
     st7789_config.bl = GPIO_NUM_26;
-    st7789_config.spi_fre = 40*1000*1000;
-    st7789_config.width = LCD_WIDTH;
-    st7789_config.height = LCD_HEIGHT;
-    st7789_config.spin = 1;     //LVGL中可以使用lv_disp_set_rotation函数进行软旋转，但效果没有直接设置屏幕好
-    st7789_config.done_cb = lv_port_flush_ready;
-    st7789_config.cb_param = &disp_drv;
+    st7789_config.spi_fre = 40*1000*1000;       //SPI时钟频率
+    st7789_config.width = LCD_WIDTH;            //屏宽
+    st7789_config.height = LCD_HEIGHT;          //屏高
+    st7789_config.spin = 1;                     //顺时针旋转90度
+    st7789_config.done_cb = lv_port_flush_ready;    //数据写入完成回调函数
+    st7789_config.cb_param = &disp_drv;         //回调函数参数
 
     st7789_driver_hw_init(&st7789_config);
 }

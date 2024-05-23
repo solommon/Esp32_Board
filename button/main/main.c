@@ -17,11 +17,11 @@ void simple_btn_test(void* arg)
     //初始化按键GPIO
     gpio_config_t gpio_t = 
     {
-        .intr_type = GPIO_INTR_DISABLE,
-        .mode = GPIO_MODE_INPUT,
-        .pin_bit_mask = (1ull<<BTN_GPIO),
-        .pull_down_en = GPIO_PULLDOWN_DISABLE,
-        .pull_up_en = GPIO_PULLUP_ENABLE,
+        .intr_type = GPIO_INTR_DISABLE,     //禁止中断
+        .mode = GPIO_MODE_INPUT,            //输入模式
+        .pin_bit_mask = (1ull<<BTN_GPIO),   //GPIO引脚号
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,  //禁止下拉
+        .pull_up_en = GPIO_PULLUP_ENABLE,   //使能上拉
     };
     ESP_ERROR_CHECK(gpio_config(&gpio_t));
     while(1)
@@ -108,16 +108,16 @@ void app_main(void)
     //初始化LED的GPIO管脚，设置成输出
     gpio_config_t gpio_t = 
     {
-        .intr_type = GPIO_INTR_DISABLE,
-        .mode = GPIO_MODE_OUTPUT,
-        .pin_bit_mask = (1ull<<LED_GPIO),
-        .pull_down_en = GPIO_PULLDOWN_DISABLE,
-        .pull_up_en = GPIO_PULLUP_ENABLE,
+        .intr_type = GPIO_INTR_DISABLE,     //禁止中断
+        .mode = GPIO_MODE_OUTPUT,           //输出模式
+        .pin_bit_mask = (1ull<<LED_GPIO),   //GPIO引脚号
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,//下拉禁止
+        .pull_up_en = GPIO_PULLUP_DISABLE,   //上拉禁止
     };
     ESP_ERROR_CHECK(gpio_config(&gpio_t));
 
     //简单按键例程
-    //xTaskCreatePinnedToCore(simple_btn_test,"btn1",2048,NULL,3,NULL,1);
+    xTaskCreatePinnedToCore(simple_btn_test,"btn1",2048,NULL,3,NULL,1);
 
     //较通用的按键例程
     xTaskCreatePinnedToCore(complete_btn_test,"btn2",2048,NULL,3,NULL,1);
