@@ -187,7 +187,7 @@ esp_err_t   web_monitor_init(ws_cfg_t *cfg)
     ws_receive_fn = cfg->receive_fn;
     ws_send_fn = cfg->send_fn;
     setup_websocket_server();
-
+    #if 0
     const esp_timer_create_args_t periodic_timer_args = {
         .callback = send_server_data,
         .name = "",
@@ -199,6 +199,6 @@ esp_err_t   web_monitor_init(ws_cfg_t *cfg)
     esp_timer_handle_t periodic_timer;
     ESP_ERROR_CHECK(esp_timer_create(&periodic_timer_args, &periodic_timer));
     ESP_ERROR_CHECK(esp_timer_start_periodic(periodic_timer, cfg->intervel_ms * 1000ull));
-
+#endif
     return ESP_OK;
 }

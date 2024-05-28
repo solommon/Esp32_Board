@@ -75,8 +75,16 @@ void cst816t_read(int16_t *x,int16_t *y,int *state)
     //读取Y坐标
     i2c_read(CST816T_ADDR,0x05,2,data_y);
 
-    last_x = ((data_x[0] & 0x0F) << 8) | (data_x[1] & 0xFF);
-    last_y = ((data_y[0] & 0x0F) << 8) | (data_y[1] & 0xFF);
+    int16_t current_x = ((data_x[0] & 0x0F) << 8) | (data_x[1] & 0xFF);
+    int16_t current_y = ((data_y[0] & 0x0F) << 8) | (data_y[1] & 0xFF);
+
+    if(last_x != current_x || current_y != last_y)
+    {
+        last_x = current_x;
+        last_y = current_y;
+        ESP_LOGI(TAG,"touch x:%d,y:%d",last_x,last_y);
+    }
+
 
     if(last_x >= s_usLimitX)
         last_x = s_usLimitX - 1;

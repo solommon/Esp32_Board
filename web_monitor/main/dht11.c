@@ -23,7 +23,7 @@ static QueueHandle_t rx_receive_queue = NULL;
 static int parse_items(rmt_symbol_word_t *item, int item_num, int *humidity, int *temp_x10);
 
 //接收完成回调函数
-static bool example_rmt_rx_done_callback(rmt_channel_handle_t channel, const rmt_rx_done_event_data_t *edata, void *user_data)
+static bool IRAM_ATTR example_rmt_rx_done_callback(rmt_channel_handle_t channel, const rmt_rx_done_event_data_t *edata, void *user_data)
 {
     BaseType_t high_task_wakeup = pdFALSE;
     QueueHandle_t rx_receive_queue = (QueueHandle_t)user_data;
@@ -46,7 +46,7 @@ void DHT11_Init(uint8_t dht11_pin)
         .mem_block_symbols = 64,          // 内存块大小，即 64 * 4 = 256 字节
         .gpio_num = dht11_pin,            // GPIO 编号
         .flags.invert_in = false,         // 不反转输入信号
-        .flags.with_dma = false,          // 不需要 DMA 后端
+        .flags.with_dma = false,          // 不需要 DMA 后端(ESP32S3才有)
     };
 	//创建rmt接收通道
 	ESP_ERROR_CHECK(rmt_new_rx_channel(&rx_chan_config, &rx_chan_handle));
@@ -71,11 +71,12 @@ static int parse_items(rmt_symbol_word_t *item, int item_num, int *humidity, int
 {
 	int i = 0;
 	unsigned int rh = 0, temp = 0, checksum = 0;
-	if (item_num < 42){					// 检查是否有足够的脉冲数
-		ESP_LOGI(TAG, "item_num < 42  %d",item_num);
+	if (item_num < 41){					// 检查是否有足够的脉冲数
+		ESP_LOGI(TAG, "item_num < 41  %d",item_num);
 		return 0;
 	}
-	item++;								// 跳过开始信号脉冲
+	if(item_num > 41)
+		item++;								// 跳过开始信号脉冲
 
 	for (i = 0; i < 16; i++, item++)	// 提取湿度数据
 	{
@@ -140,12 +141,12 @@ int DHT11_StartGet(int *temp_x10, int *humidity)
 
 	//启动RMT接收器以获取数据
 	rmt_receive_config_t receive_config = {
-        .signal_range_min_ns = 1000,     //最小脉冲宽度(1us),信号长度小于这个值，视为干扰
-        .signal_range_max_ns = 200*1000, 	//最大脉冲宽度(200us)，信号长度大于这个值，视为结束信号
+        .signal_range_min_ns = 100,     //最小脉冲宽度(0.1us),信号长度小于这个值，视为干扰
+        .signal_range_max_ns = 1000*1000, 	//最大脉冲宽度(1000us)，信号长度大于这个值，视为结束信号
     };
 	
-	rmt_symbol_word_t raw_symbols[64];	//接收缓存
-    rmt_rx_done_event_data_t rx_data;	//实际接收到的数据
+	static rmt_symbol_word_t raw_symbols[128];	//接收缓存
+    static rmt_rx_done_event_data_t rx_data;	//实际接收到的数据
 	ESP_ERROR_CHECK(rmt_receive(rx_chan_handle, raw_symbols, sizeof(raw_symbols), &receive_config));
 
 	// wait for RX done signal

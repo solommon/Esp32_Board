@@ -18,7 +18,7 @@
 #define LED_PIN     GPIO_NUM_27
 
 //DHT11 GPIO
-#define DHT11_PIN   GPIO_NUM_13
+#define DHT11_PIN   GPIO_NUM_25
 
 #define TAG     "main"
 
@@ -29,7 +29,7 @@ static float s_fTemp = 0.0f;
 //湿度
 static int s_iHumidity = 0;
 
-#define INDEX_HTML_PATH "/spiffs/index.html"
+#define INDEX_HTML_PATH "/spiffs/esp.html"
 char index_html[4096];
 
 /** 从spiffs中加载html页面到内存
@@ -52,7 +52,7 @@ static void initi_web_page_buffer(void)
     struct stat st;
     if (stat(INDEX_HTML_PATH, &st))
     {
-        ESP_LOGE(TAG, "index.html not found");
+        ESP_LOGE(TAG, "esp.html not found");
         return;
     }
     //打开html文件并且读取到内存中
@@ -117,6 +117,23 @@ void esp_ws_send(char* send_buf,int *len)
     cJSON_Delete(js);
 }
 
+
+void dht11_task(void* param)
+{
+    while(1)
+    {
+        int temp_x10 = 0;
+        vTaskDelay(pdMS_TO_TICKS(2500));
+        if(DHT11_StartGet(&temp_x10,&s_iHumidity))
+        {
+            s_fTemp = (float)temp_x10/10.0;
+            //ESP_LOGI(TAG,"temp:%.1f,humidity:%d",s_fTemp,s_iHumidity);
+        }
+        
+        
+    }
+}
+
 void app_main()
 {
     /*初始化 NVS */
@@ -158,11 +175,5 @@ void app_main()
     web_monitor_init(&ws);
 
     ESP_LOGI(TAG, "ESP32 ESP-IDF WebSocket Web Server is running ... ...\n");
-    while(1)
-    {
-        int temp_x10 = 0;
-        DHT11_StartGet(&temp_x10,&s_iHumidity);
-        s_fTemp = (float)temp_x10/10.0;
-        vTaskDelay(pdMS_TO_TICKS(2500));
-    }
+    xTaskCreatePinnedToCore(dht11_task,"dht11",4096,NULL,4,NULL,1);
 }

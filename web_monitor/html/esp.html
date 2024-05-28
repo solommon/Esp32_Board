@@ -2,7 +2,8 @@
 <html>
 
 <head>
-    <title>ESP32 Web Server</title>
+    <meta charset="UTF-8">
+	<title>ESP32 Web Server</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:,">
     <style>
@@ -102,10 +103,10 @@
 			<p class="humidity">湿度: <span id="humidity">--</span></p>
         </div>
     </div>
-    </div>
     <script>
         var gateway = `ws://${window.location.hostname}/ws`;
         var websocket;
+		console.log('script run');
         window.addEventListener('load', onLoad);//		<--页面加载完毕,执行onLoad-->
         function initWebSocket() {
             console.log('Trying to open a WebSocket connection...');

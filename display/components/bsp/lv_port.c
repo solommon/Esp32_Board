@@ -47,7 +47,7 @@ static void lv_port_flush_ready(void* param)
 static void disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p)
 {
     (void) disp_drv;
-    st7789_flush(area->x1, area->x2 + 1, area->y1,area->y2 + 1, color_p);
+    st7789_flush(area->x1 + 20, area->x2 + 1 + 20, area->y1,area->y2 + 1, color_p);
 }
 
 /**
@@ -75,8 +75,8 @@ static void lv_port_disp_init(void)
     lv_disp_drv_init(&disp_drv);
 
     /*设置水平和垂直宽度*/
-    disp_drv.hor_res = LCD_WIDTH;
-    disp_drv.ver_res = LCD_HEIGHT;
+    disp_drv.hor_res = LCD_WIDTH;       //水平宽度
+    disp_drv.ver_res = LCD_HEIGHT;      //垂直宽度
 
     /* 设置刷新数据函数 */
     disp_drv.flush_cb = disp_flush;
@@ -181,6 +181,8 @@ static void tp_init(void)
     cst816t_config.scl = GPIO_NUM_22;
     cst816t_config.x_limit = LCD_HEIGHT;    //由于屏幕显示旋转了90°，X和Y触摸需要调转
     cst816t_config.y_limit = LCD_WIDTH;
+    //cst816t_config.x_limit = LCD_WIDTH;
+    //cst816t_config.y_limit = LCD_HEIGHT;
     cst816t_config.fre = 200*1000;
     
 
