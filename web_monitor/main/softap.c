@@ -91,19 +91,17 @@ esp_netif_t *wifi_init_softap(void)
     return esp_netif_ap;
 }
 
-
-void app_main(void)
+/** 初始化softap
+ * @param 无
+ * @return 无
+*/
+void softap_init(void)
 {
     ESP_ERROR_CHECK(esp_netif_init());      //初始化网卡设备
     ESP_ERROR_CHECK(esp_event_loop_create_default());   //创建事件循环
 
     //初始化NVS
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK(ret);
+    //在app_main中已进行初始化
 
     //注册WIFI事件
     ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
@@ -127,6 +125,17 @@ void app_main(void)
     //初始化AP
     ESP_LOGI(TAG_AP, "ESP_WIFI_MODE_AP");
     esp_netif_t *esp_netif_ap = wifi_init_softap();
+
+    //设置IP地址
+    esp_netif_ip_info_t ipInfo;
+    IP4_ADDR(&ipInfo.ip, 192,168,100,1);
+	IP4_ADDR(&ipInfo.gw, 192,168,100,1);
+	IP4_ADDR(&ipInfo.netmask, 255,255,255,0);
+	esp_netif_dhcps_stop(esp_netif_ap);
+	esp_netif_set_ip_info(esp_netif_ap, &ipInfo);
+	esp_netif_dhcps_start(esp_netif_ap);
+    //dns_local_addhost
+
 
     //启动WIFI工作
     ESP_ERROR_CHECK(esp_wifi_start() );

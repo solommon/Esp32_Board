@@ -1,22 +1,15 @@
-#include <string.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <nvs_flash.h>
 #include <driver/rmt_rx.h>
 #include <driver/rmt_tx.h>
 #include <soc/rmt_reg.h>
-#include "driver/gpio.h" 
-#include <esp_log.h>
-#include <freertos/queue.h>
+#include "esp_log.h"
+#include "driver/gpio.h"
+#include "esp_system.h"
 #include "esp32/rom/ets_sys.h"
 
-#define DHT11_GPIO	25		// DHT11引脚定义
-const static char *TAG = "DHT11_Demo";
-
-// 温度是10倍，/10有1位小数
-int temp_x10 = 123;
-int humidity = 60;
-const int channel = 0;
+#define TAG		"DHT11"
 
 uint8_t DHT11_PIN = -1;
 
@@ -39,7 +32,10 @@ static bool example_rmt_rx_done_callback(rmt_channel_handle_t channel, const rmt
     return high_task_wakeup == pdTRUE;
 }
 
-// DHT11 初始化
+/** DHT11初始化
+ * @param dht11_pin GPIO引脚
+ * @return 无
+*/
 void DHT11_Init(uint8_t dht11_pin)
 {
 	DHT11_PIN = dht11_pin;
@@ -70,7 +66,7 @@ void DHT11_Init(uint8_t dht11_pin)
 	ESP_ERROR_CHECK(rmt_enable(rx_chan_handle));
 }
 
-// 将RMT读取到的脉冲数据处理为温度和湿度(rmt_symbol_word_t成为RMT符号)
+// 将RMT读取到的脉冲数据处理为温度和湿度(rmt_symbol_word_t称为RMT符号)
 static int parse_items(rmt_symbol_word_t *item, int item_num, int *humidity, int *temp_x10)
 {
 	int i = 0;
@@ -123,7 +119,10 @@ static int parse_items(rmt_symbol_word_t *item, int item_num, int *humidity, int
 }
 
 
-// 使用RMT接收DHT11数据
+/** 获取DHT11数据
+ * @param temp_x10 温度值
+ * @return 无
+*/
 int DHT11_StartGet(int *temp_x10, int *humidity)
 {
 	//发送20ms开始信号脉冲启动DHT11单总线
@@ -155,27 +154,4 @@ int DHT11_StartGet(int *temp_x10, int *humidity)
 		return parse_items(rx_data.received_symbols, rx_data.num_symbols,humidity, temp_x10);
 	}
     return 0;
-}
-
-// 温度 湿度变量
-int temp = 0,hum = 0;
-
-// 主函数
-void app_main(void)
-{
-	ESP_ERROR_CHECK(nvs_flash_init());
-	vTaskDelay(100 / portTICK_PERIOD_MS);
-
-	ESP_LOGI(TAG, "[APP] APP Is Start!~\r\n");
-	ESP_LOGI(TAG, "[APP] IDF Version is %d.%d.%d",ESP_IDF_VERSION_MAJOR,ESP_IDF_VERSION_MINOR,ESP_IDF_VERSION_PATCH);
-	ESP_LOGI(TAG, "[APP] Free memory: %lu bytes", esp_get_free_heap_size());
-	ESP_LOGI(TAG, "[APP] IDF version: %s", esp_get_idf_version());
-	
-	DHT11_Init(DHT11_GPIO);
-	while (1){
-		if (DHT11_StartGet(&temp, &hum)){
-			ESP_LOGI(TAG, "temp->%i.%i C     hum->%i%%", temp / 10, temp % 10, hum);
-		}
-		vTaskDelay(1000 / portTICK_PERIOD_MS);
-	}
 }
