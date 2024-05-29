@@ -91,18 +91,6 @@
 </head>
 
 <body>
-    <div class="topnav">
-        <h1>ESP32 WebSocket Server</h1>
-    </div>
-    <div class="content">
-        <div class="card">
-            <!--<h2>ONBOARD LED GPIO2</h2>-->
-            <p><button id="button" class="button">Toggle LED</button></p>
-            <p class="led">灯: <span id="led">--</span></p>
-			<p class="temp">温度: <span id="temp">--</span></p>
-			<p class="humidity">湿度: <span id="humidity">--</span></p>
-        </div>
-    </div>
     <script>
         var gateway = `ws://${window.location.hostname}/ws`;
         var websocket;
@@ -141,6 +129,18 @@
             websocket.send('toggle');
         }
     </script>
+	<div class="topnav">
+        <h1>ESP32 WebSocket Server</h1>
+    </div>
+    <div class="content">
+        <div class="card">
+            <!--<h2>ONBOARD LED GPIO2</h2>-->
+            <p><button id="button" class="button">Toggle LED</button></p>
+            <p class="led">灯: <span id="led">--</span></p>
+			<p class="temp">温度: <span id="temp">--</span></p>
+			<p class="humidity">湿度: <span id="humidity">--</span></p>
+        </div>
+    </div>
 </body>
 
 </html>

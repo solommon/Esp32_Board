@@ -30,7 +30,7 @@ static float s_fTemp = 0.0f;
 static int s_iHumidity = 0;
 
 #define INDEX_HTML_PATH "/spiffs/esp.html"
-char index_html[4096];
+char index_html[8192];
 
 /** 从spiffs中加载html页面到内存
  * @param 无
@@ -69,10 +69,10 @@ static void initi_web_page_buffer(void)
  * @param len 值
  * @return 无 
 */
-void esp_ws_receive(const char* payload,int len)
+void esp_ws_receive(uint8_t* payload,int len)
 {
     ESP_LOGI(TAG,"ws receive:%s",payload);
-    if(strstr(payload,"toggle"))
+    if(strstr((const char*)payload,"toggle"))
     {
         led_state = led_state?0:1;
         gpio_set_level(LED_PIN,led_state);
@@ -101,17 +101,17 @@ void esp_ws_send(char* send_buf,int *len)
     cJSON_AddStringToObject(js,"led",str_buf);
 
     //温度
-    snprintf(str_buf,16,"%.1f",s_fTemp);
+    snprintf(str_buf,16,"%.1f°",s_fTemp);
     cJSON_AddStringToObject(js,"temp",str_buf);
 
     //湿度
-    snprintf(str_buf,16,"%d",s_iHumidity);
+    snprintf(str_buf,16,"%d%%",s_iHumidity);
     cJSON_AddStringToObject(js,"humidity",str_buf);
 
     char * js_value = cJSON_PrintUnformatted(js);
     sprintf(send_buf,"%s",js_value);
     *len = strlen(send_buf);
-    ESP_LOGI(TAG,"ws send:%s",send_buf);
+    ESP_LOGD(TAG,"ws send:%s",send_buf);
 
     cJSON_free(js_value);
     cJSON_Delete(js);
@@ -129,8 +129,6 @@ void dht11_task(void* param)
             s_fTemp = (float)temp_x10/10.0;
             //ESP_LOGI(TAG,"temp:%.1f,humidity:%d",s_fTemp,s_iHumidity);
         }
-        
-        
     }
 }
 

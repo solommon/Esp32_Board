@@ -72,7 +72,7 @@ static int parse_items(rmt_symbol_word_t *item, int item_num, int *humidity, int
 	int i = 0;
 	unsigned int rh = 0, temp = 0, checksum = 0;
 	if (item_num < 41){					// 检查是否有足够的脉冲数
-		ESP_LOGI(TAG, "item_num < 41  %d",item_num);
+		//ESP_LOGI(TAG, "item_num < 41  %d",item_num);
 		return 0;
 	}
 	if(item_num > 41)
@@ -114,8 +114,15 @@ static int parse_items(rmt_symbol_word_t *item, int item_num, int *humidity, int
 		return 0;
 	}
 	// 返回数据
-	*humidity = rh >> 8;
-	*temp_x10 = (temp >> 8) * 10 + (temp & 0xFF);
+	
+	rh = rh >> 8;
+	temp = (temp >> 8) * 10 + (temp & 0xFF);
+
+	//判断数据合法性
+	if(rh <= 100)
+		*humidity = rh;
+	if(temp <= 600)
+		*temp_x10 = temp;
 	return 1;
 }
 

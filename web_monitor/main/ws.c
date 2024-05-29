@@ -114,10 +114,9 @@ static esp_err_t handle_ws_req(httpd_req_t *req)
 
     if (ws_pkt.type == HTTPD_WS_TYPE_TEXT)
     {
-        free(buf);
         if(ws_receive_fn)
-            ws_receive_fn((const char*)ws_pkt.payload,ws_pkt.len);
-
+            ws_receive_fn(ws_pkt.payload,ws_pkt.len);
+        free(buf);
         return trigger_async_send(req->handle, req);
     }
     return ESP_OK;
@@ -187,7 +186,7 @@ esp_err_t   web_monitor_init(ws_cfg_t *cfg)
     ws_receive_fn = cfg->receive_fn;
     ws_send_fn = cfg->send_fn;
     setup_websocket_server();
-    #if 0
+    #if 1
     const esp_timer_create_args_t periodic_timer_args = {
         .callback = send_server_data,
         .name = "",

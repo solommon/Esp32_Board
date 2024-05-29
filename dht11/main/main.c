@@ -145,8 +145,8 @@ int DHT11_StartGet(int *temp_x10, int *humidity)
         .signal_range_max_ns = 200*1000, 	//最大脉冲宽度(200us)，信号长度大于这个值，视为结束信号
     };
 	
-	rmt_symbol_word_t raw_symbols[64];	//接收缓存
-    rmt_rx_done_event_data_t rx_data;	//实际接收到的数据
+	static rmt_symbol_word_t raw_symbols[64];	//接收缓存
+    static rmt_rx_done_event_data_t rx_data;	//实际接收到的数据
 	ESP_ERROR_CHECK(rmt_receive(rx_chan_handle, raw_symbols, sizeof(raw_symbols), &receive_config));
 
 	// wait for RX done signal

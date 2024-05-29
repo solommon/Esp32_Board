@@ -3,7 +3,7 @@
 #include "esp_err.h"
 
 //ws接收到的处理回调函数
-typedef void(*ws_receive_cb)(const char* payload,int len);
+typedef void(*ws_receive_cb)(uint8_t* payload,int len);
 
 //ws周期需要发送的函数数据
 typedef void(*ws_send_cb)(char* send_buf,int *len);
