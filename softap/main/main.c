@@ -12,9 +12,6 @@
 #include "lwip/inet.h"
 #include "lwip/netdb.h"
 #include "lwip/sockets.h"
-#if IP_NAPT
-#include "lwip/lwip_napt.h"
-#endif
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
@@ -131,8 +128,4 @@ void app_main(void)
     //启动WIFI工作
     ESP_ERROR_CHECK(esp_wifi_start() );
 
-    //启用NAPT
-    if (esp_netif_napt_enable(esp_netif_ap) != ESP_OK) {
-        ESP_LOGE(TAG_AP, "NAPT not enabled on the netif: %p", esp_netif_ap);
-    }
 }
