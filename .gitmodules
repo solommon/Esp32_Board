@@ -1,3 +1,6 @@
 [submodule "display/components/lvgl"]
 	path = display/components/lvgl
 	url = https://github.com/lvgl/lvgl
+[submodule "lvgl_display/components/lvgl"]
+	path = lvgl_display/components/lvgl
+	url = https://github.com/lvgl/lvgl
