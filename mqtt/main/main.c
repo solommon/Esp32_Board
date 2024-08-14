@@ -12,7 +12,7 @@ static const char* TAG = "main";
 #define MQTT_ADDRESS    "mqtt://broker-cn.emqx.io"     //MQTT连接地址
 #define MQTT_PORT       1883                        //MQTT连接端口号
 #define MQTT_CLIENT     "mqttx_d11213"              //Client ID（设备唯一，大家最好自行改一下）
-#define MQTT_USERNAME   "hello"                     //MQTT用户名
+#define MQTT_USERNAME   "hello1"                     //MQTT用户名
 #define MQTT_PASSWORD   "12345678"                  //MQTT密码
 
 #define MQTT_PUBLIC_TOPIC      "/test/topic1"       //测试用的,推送消息主题

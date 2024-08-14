@@ -14,8 +14,8 @@
 #include "esp_log.h"
 
 //需要把这两个修改成你家WIFI，测试是否连接成功
-#define DEFAULT_WIFI_SSID           "testwifi"
-#define DEFAULT_WIFI_PASSWORD       "12345678"
+#define DEFAULT_WIFI_SSID           "HUAWEI-404"
+#define DEFAULT_WIFI_PASSWORD       "zhuchengcheng123"
 
 static const char *TAG = "wifi";
 
