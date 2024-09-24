@@ -102,6 +102,8 @@ void IRAM_ATTR indev_read(struct _lv_indev_drv_t * indev_drv, lv_indev_data_t * 
     int state;
     cst816t_read(&x,&y,&state);
     data->point.x = y;
+    if(x == 0)
+        x = 1;
     data->point.y = LCD_HEIGHT - x;
     data->state = state;
    

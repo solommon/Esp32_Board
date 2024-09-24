@@ -13,12 +13,17 @@
 #include "softap.h"
 #include "ws.h"
 #include "cJSON.h"
+#include "led_ws2812.h"
 
 //LED GPIO
 #define LED_PIN     GPIO_NUM_27
 
 //DHT11 GPIO
 #define DHT11_PIN   GPIO_NUM_25
+
+//WS2812 GPIO
+#define WS2812_PIN  GPIO_NUM_26
+#define WS2812_NUM  12
 
 #define TAG     "main"
 
@@ -31,6 +36,8 @@ static int s_iHumidity = 0;
 
 #define INDEX_HTML_PATH "/spiffs/esp.html"
 char index_html[8192];
+
+static ws2812_strip_handle_t ws2812_handle;
 
 /** 从spiffs中加载html页面到内存
  * @param 无
@@ -75,7 +82,14 @@ void esp_ws_receive(uint8_t* payload,int len)
     if(strstr((const char*)payload,"toggle"))
     {
         led_state = led_state?0:1;
-        gpio_set_level(LED_PIN,led_state);
+        uint32_t value = 0;
+        if(led_state)
+            value = 80;
+        for(int i = 0;i < WS2812_NUM;i++)
+        {
+            ws2812_write(ws2812_handle,i,value,value,value);
+        }
+        //gpio_set_level(LED_PIN,led_state);
     }
 }
 
@@ -144,6 +158,7 @@ void app_main()
     ESP_ERROR_CHECK(ret);
 
     /*初始化LED*/
+    #if 0
     gpio_config_t led_gpio_cfg = {
         .pin_bit_mask = (1<<LED_PIN),          //指定GPIO
         .mode = GPIO_MODE_OUTPUT,               //设置为输出模式
@@ -153,6 +168,9 @@ void app_main()
     };
     gpio_config(&led_gpio_cfg);
     gpio_set_level(LED_PIN,0);
+    #endif
+    ws2812_init(WS2812_PIN,WS2812_NUM,&ws2812_handle);
+
     led_state = 0;
 
     /*初始化DHT11*/
