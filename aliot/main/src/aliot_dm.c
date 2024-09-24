@@ -30,7 +30,7 @@ ALIOT_DM_DES* aliot_malloc_dm(ALIOT_DM_TYPE dm_type)
         {
             case ALIOT_DM_POST:      //常规属性上报
                 cJSON_AddObjectToObject(dm->dm_js,"params");
-                cJSON_AddStringToObject(dm->dm_js,"method","hing.event.property.post");
+                cJSON_AddStringToObject(dm->dm_js,"method","thing.event.property.post");
                 break;
             case ALIOT_DM_SET_ACK:   //属性设置回复
                 cJSON_AddObjectToObject(dm->dm_js,"data");
