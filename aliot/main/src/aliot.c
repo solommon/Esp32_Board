@@ -39,6 +39,7 @@ char* aliot_get_devicename(void)
     static char aliot_mqtt_devicename[64] = {0};
     if(aliot_mqtt_devicename[0] == 0)
     {
+        #if 0
         esp_err_t esp_code = ESP_OK;
         uint8_t eth_mac[6];
         esp_code = esp_wifi_get_mac(WIFI_IF_STA, eth_mac);
@@ -46,6 +47,8 @@ char* aliot_get_devicename(void)
             memset(eth_mac,0,sizeof(eth_mac));
         snprintf(aliot_mqtt_devicename,64,"%s%02X%02X%02X%02X%02X%02X","ESP",
         eth_mac[0],eth_mac[1],eth_mac[2],eth_mac[3],eth_mac[4],eth_mac[5]);
+        #endif
+        snprintf(aliot_mqtt_devicename,sizeof(aliot_mqtt_devicename),"%s",ALIOT_DEVICE_NAME);
     }
     return aliot_mqtt_devicename;
 }
@@ -70,8 +73,8 @@ char* aliot_get_devicesecret(void)
     static char is_first_load = 0;
     if(!is_first_load)
     {
+        #ifdef ALIOT_USE_REGISTER
         size_t required_size = 0;
-        
         nvs_handle_t handle;
         ESP_ERROR_CHECK(nvs_open(ALIOT_NVS_NAMESPACE, NVS_READWRITE,&handle));
         nvs_get_str(handle, ALIOT_DEVICESECRET_ITEM, NULL, &required_size);
@@ -80,24 +83,14 @@ char* aliot_get_devicesecret(void)
             nvs_get_str(handle, ALIOT_DEVICESECRET_ITEM, s_device_secret, &required_size);
             ESP_LOGI(TAG,"get secret,len:%d,value:%s",required_size,s_device_secret);
         }
-        /*
-        if(required_size)
-        {
-            char *tmp = (char*)malloc(required_size);
-            nvs_get_str(handle, ALIOT_DEVICESECRET_ITEM, tmp, &required_size);
-
-            printf("get tmp:");
-            for(int i = 0;i < required_size;i++)
-            {
-                printf("%c",tmp[i]);
-            }
-            printf("\n");
-        }
-        */
-        is_first_load = 1;
         nvs_close(handle);
+        #else
+        snprintf(s_device_secret,sizeof(s_device_secret),"%s",ALIOT_DEVICE_SECRET);
+        #endif
+        is_first_load = 1;
     }
     return s_device_secret;
+
 }
 
 /**

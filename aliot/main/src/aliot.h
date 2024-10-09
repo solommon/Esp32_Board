@@ -2,14 +2,25 @@
 #define _ALIOT_H_
 #include <stdint.h>
 
-//产品ID
+//产品KEY
 #define  ALIOT_PRODUCT_KEY  "a1aZYOu6wEW"
 
-//产品秘钥
+//产品SECRET
 #define  ALIOT_PRODUCT_SECRET "XBy6j3XshVnffaTO"
+
+//设备名称
+#define  ALIOT_DEVICE_NAME  "ESP48E729B67324"
 
 //YourRegionId 北京:cn-beijing;上海:cn-shanghai;深圳:cn-shenzhen
 #define  ALIOT_REGION_ID  "cn-shanghai"
+
+//是否使用动态注册的方式
+//#define ALIOT_USE_REGISTER
+
+//设备秘钥
+#ifndef ALIOT_USE_REGISTER
+#define ALIOT_DEVICE_SECRET     "f307c7fffa4ec41a7c17e9da699ce351"
+#endif
 
 /**
  * 获取设备名称

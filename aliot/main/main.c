@@ -17,6 +17,7 @@
 #include "cJSON.h"
 #include "aliot.h"
 #include "aliot_dm.h"
+#include "button.h"
 
 #define TAG     "main"
 
